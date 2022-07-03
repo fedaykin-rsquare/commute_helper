@@ -1,26 +1,10 @@
 import {logger} from '../log/winston';
 import puppeteer, {Browser, Page, HTTPResponse, ElementHandle, WaitForOptions} from 'puppeteer';
-
-interface Selector {
-	company: string,
-	id: string,
-	password: string,
-	login: string,
-	startWork: string,
-	endWork: string
-}
+import {selector} from '../interface/Selector';
 
 class Commute {
 	private url: string = 'https://ehr.jadehr.co.kr/';
 	private companyCode: string = '2202010';
-	private selector: Selector = {
-		company: '#S_C_CD',
-		id: '#S_USER_ID',
-		password: '#S_PWD',
-		login: '#btn_login',
-		startWork: '#S_WORK_STA_BTN',
-		endWork: '#S_WORK_END_BTN'
-	};
 	private waitForOptions: WaitForOptions = {
 		waitUntil: 'networkidle2'
 	}
@@ -70,13 +54,13 @@ class Commute {
 		const response: HTTPResponse | null = await page.goto(this.url);
 		
 		if (response !== null && response.ok()) {
-			const loginButton: ElementHandle | null = await page.waitForSelector(this.selector.login, this.waitForOptions);
+			const loginButton: ElementHandle | null = await page.waitForSelector(selector.login, this.waitForOptions);
 			
 			if (loginButton !== null) {
-				await page.type(this.selector.company, this.companyCode);
-				await page.type(this.selector.id, id);
-				await page.type(this.selector.password, password);
-				await page.click(this.selector.login);
+				await page.type(selector.company, this.companyCode);
+				await page.type(selector.id, id);
+				await page.type(selector.password, password);
+				await page.click(selector.login);
 				
 				const nextPageResponse: HTTPResponse | null = await page.waitForNavigation(this.waitForOptions);
 				
@@ -104,13 +88,13 @@ class Commute {
 		
 		 // console.log('result :', result);
 		 
-		 await page.click(this.selector.startWork);
+		 await page.click(selector.startWork);
 	 }
 	
 	public async end(page: Page) {
 		logger.info('end function is started!');
 		
-		await page.click(this.selector.endWork);
+		await page.click(selector.endWork);
 	}
 	
 	public async workStart() {
