@@ -7,13 +7,13 @@ import app from '../app'
 import http from 'http';
 import {AddressInfo} from 'net';
 
-const debug = require('debug')('commute-bot:server');
+const debug = require('debug')('commute-helper:server');
 
 /**
  * Get port from environment and store in Express.
  */
 
-const port = normalizePort(process.env.PORT || '3000');
+const port = normalizePort(process.env.PORT || '8080');
 app.set('port', port);
 
 /**
