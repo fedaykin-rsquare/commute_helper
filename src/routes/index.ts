@@ -27,6 +27,8 @@ router.post('/message', async (req, res) => {
   } else if (message === messageTypes.end) {
     await commute.workEnd();
   }
+  
+  res.json({'text': '발신 테스트 중입니다.'});
 });
 
 // 테스트용
