@@ -1,12 +1,19 @@
 import {logger} from '../log/winston';
-import puppeteer, {Browser, Page, HTTPResponse, ElementHandle, WaitForOptions} from 'puppeteer';
+import puppeteer, {Browser, ElementHandle, HTTPResponse, Page, WaitForOptions} from 'puppeteer';
 import {selector} from '../interface/Selector';
+import SlackAPI from './SlackAPI';
+import UserRepository from '../repository/UserRepository';
+import {User} from '../interface/User';
+import {SlackInfo} from '../interface/SlackInfo';
 
 class Commute {
-	private url: string = 'https://ehr.jadehr.co.kr/';
+	private userRepository: UserRepository = new UserRepository();
+	private jadeUrl: string = 'https://ehr.jadehr.co.kr/';
 	private companyCode: string = '2202010';
+	// 'load' | 'domcontentloaded' | 'networkidle0' | 'networkidle2';
 	private waitForOptions: WaitForOptions = {
-		waitUntil: 'networkidle2'
+		// timeout: 5000,
+		waitUntil: 'domcontentloaded'
 	}
 	
 	constructor() {
@@ -28,7 +35,7 @@ class Commute {
 					, hasTouch: false
 					, isLandscape: false
 				}
-				, timeout: 3000
+				, timeout: 5000
 				, pipe: false
 			});
 			
@@ -44,28 +51,49 @@ class Commute {
 		return null;
 	}
 	
-	public async login(browser: Browser): Promise<Page | null> {
+	public async login(browser: Browser, slackInfo: SlackInfo): Promise<Page | null> {
 		logger.info('login function is started!');
 		
 		const page: Page = await browser.newPage();
-		const id: string = 'fedaykin';
-		const password: string = '';
-		
-		const response: HTTPResponse | null = await page.goto(this.url);
+		const response: HTTPResponse | null = await page.goto(this.jadeUrl);
 		
 		if (response !== null && response.ok()) {
 			const loginButton: ElementHandle | null = await page.waitForSelector(selector.login, this.waitForOptions);
 			
 			if (loginButton !== null) {
+				const userInfo: User | null = await this.userRepository.findByUserId(slackInfo.userName);
+				
+				if (userInfo == null) {
+					logger.error('Can\'t get User Information for jade!');
+					logger.error('Slack Id - ' + slackInfo.userName);
+					
+					return null;
+				}
+				
 				await page.type(selector.company, this.companyCode);
-				await page.type(selector.id, id);
-				await page.type(selector.password, password);
+				await page.type(selector.id, userInfo.jadeUserId);
+				await page.type(selector.password, userInfo.jadeUserPassword);
 				await page.click(selector.login);
 				
 				const nextPageResponse: HTTPResponse | null = await page.waitForNavigation(this.waitForOptions);
 				
 				if (nextPageResponse !== null && nextPageResponse.ok()) {
-					logger.info('Success in login! ID - ' + id);
+					logger.info('Success in login! ID - ' + userInfo.jadeUserId);
+					
+					page.on('dialog', async (dialog) => {
+						const dialogType: string = dialog.type(); // 'alert' | 'confirm' | 'prompt' | 'beforeunload'
+						const dialogMessage: string = dialog.message();
+						const userInfo: User | null = await this.userRepository.findByUserId(slackInfo.userName);
+						
+						if (dialogType === 'alert') {
+							logger.error(dialogMessage);
+						} else if (dialogType === 'confirm') {
+						
+						}
+						
+						await dialog.accept();
+						new SlackAPI().send(dialogMessage, userInfo?.userName);
+					});
 					
 					return page;
 				}
@@ -81,14 +109,16 @@ class Commute {
 	 public async start(page: Page) {
 		 logger.info('start function is started!');
 		 
-		 /*const result: string = await page.evaluate(() => {
-			 // `${MainPage.mainInfoXs.GetCellValue(0, 'PLAN_WORK_YN', 'tmpInfo')}`
-			 // return `MainPage.mainInfoXs.GetCellValue(0, 'PLAN_WORK_YN', 'tmpInfo')`;
-		 });*/
-		
-		 // console.log('result :', result);
-		 
+		 await page.waitForTimeout(1000);
 		 await page.click(selector.startWork);
+		 
+		 const blockFrameElementHandle: ElementHandle | null = await page.waitForSelector(selector.blockFrame, this.waitForOptions);
+		 
+		 await blockFrameElementHandle?.evaluate((element, selector) => {
+			 const saveElement: Element | null = document.querySelector(selector.save);
+			
+			 console.log('saveElement :', saveElement);
+		 }, selector);
 	 }
 	
 	public async end(page: Page) {
@@ -97,25 +127,25 @@ class Commute {
 		await page.click(selector.endWork);
 	}
 	
-	public async workStart() {
+	public async workStart(slackInfo: SlackInfo) {
 		const browser: Browser | null = await this.launch();
 		
 		if (browser !== null) {
-			const page: Page | null = await this.login(browser);
+			const page: Page | null = await this.login(browser, slackInfo);
 			
 			if (page !== null) {
 				await this.start(page);
 			}
 			
-			await browser.close();
+			// await browser.close();
 		}
 	}
 	
-	public async workEnd() {
+	public async workEnd(slackInfo: SlackInfo) {
 		const browser: Browser | null = await this.launch();
 		
 		if (browser !== null) {
-			const page: Page | null = await this.login(browser);
+			const page: Page | null = await this.login(browser, slackInfo);
 			
 			if (page !== null) {
 				await this.end(page);

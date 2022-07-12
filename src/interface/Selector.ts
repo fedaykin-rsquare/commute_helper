@@ -5,7 +5,9 @@ export declare interface Selector {
 	password: string,
 	login: string,
 	startWork: string,
-	endWork: string
+	endWork: string,
+	blockFrame: string,
+	save: string,
 }
 
 export const selector: Selector = {
@@ -14,5 +16,7 @@ export const selector: Selector = {
 	password: '#S_PWD',
 	login: '#btn_login',
 	startWork: '#S_WORK_STA_BTN',
-	endWork: '#S_WORK_END_BTN'
+	endWork: '#S_WORK_END_BTN',
+	blockFrame: '.modalCon iframe',
+	save: '.save'
 };
