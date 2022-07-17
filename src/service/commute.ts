@@ -8,8 +8,8 @@ import {SlackInfo} from '../interface/SlackInfo';
 
 class Commute {
 	private userRepository: UserRepository = new UserRepository();
-	private jadeUrl: string = 'https://ehr.jadehr.co.kr/';
-	private companyCode: string = '2202010';
+	private jadeUrl: string = process.env.jade_url || 'https://ehr.jadehr.co.kr/';
+	private companyCode: string = process.env.company_code || '2202010';
 	// 'load' | 'domcontentloaded' | 'networkidle0' | 'networkidle2';
 	private waitForOptions: WaitForOptions = {
 		// timeout: 5000,

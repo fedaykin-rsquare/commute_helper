@@ -5,6 +5,7 @@ import {convertToSlackInfo, OutWebhook, SlackInfo} from '../interface/SlackInfo'
 import {messageTypes} from '../interface/MessageTypes';
 import UserRepository from '../repository/UserRepository';
 import {User} from '../interface/User';
+import CipherModule from '../crypto/CipherModule';
 
 const router = express.Router();
 
@@ -35,12 +36,12 @@ router.get('/commute', (async (req, res) => {
 	const commute: Commute = new Commute();
 	const browser: Browser | null = await commute.launch();
 	const slackInfo: SlackInfo = {
-		teamDomain: '',
-		serviceId: '',
-		channelId: '',
-		channelName: '',
-		timestamp: '',
-		userId: '',
+		teamDomain: 'rsquare',
+		serviceId: '3765375367249',
+		channelId: 'C03N74EFU1J',
+		channelName: '출퇴근_도우미_테스트용',
+		timestamp: '1657032514.184039',
+		userId: 'U02T9DCKRNE',
 		userName: 'fedaykin',
 		text: '출근'
 	}
@@ -68,10 +69,12 @@ router.get('/db', async (req, res) => {
 		userName: '정상운',
 		jadeUserId: 'fedaykin',
 		jadeUserPassword: '',
+		salt: ''
 	}
 	
 	await userRepository.deleteOne(userOne.userId);
 	await userRepository.insertOne(userOne);
+	console.log(await userRepository.findByUserId(userOne.userId));
 });
 
 router.get('/db/create', async (req, res) => {
@@ -81,5 +84,15 @@ router.get('/db/create', async (req, res) => {
 	
 	res.send(text);
 })
+
+router.get('/cipher', (req, res) => {
+	const text: string = '';
+	const cipherModule: CipherModule = new CipherModule();
+	const encryptedText: string = cipherModule.encrypt(text);
+	
+	console.log('text :', text);
+	console.log('encrypted :', cipherModule.encrypt(text));
+	console.log('decrypted :', cipherModule.decrypt(encryptedText, cipherModule.getSalt()));
+});
 
 module.exports = router;

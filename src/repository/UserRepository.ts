@@ -6,10 +6,11 @@ import {Attributes, DestroyOptions} from 'sequelize/types/model';
 
 const createSql: string =
 		'CREATE TABLE IF NOT EXISTS User (' +
-			'user_id varchar(20) primary key' +
-			', user_name varchar(10)' +
-			', jade_user_id varchar(20)' +
-			', jade_user_password varchar(100)' +
+			'user_id varchar(30) primary key' +
+			', user_name varchar(30)' +
+			', jade_user_id varchar(30)' +
+			', jade_user_password varchar(30)' +
+			', salt varchar(32)' +
 			', created_at timestamp' +
 			', updated_at timestamp' +
 		')';

@@ -1,6 +1,8 @@
 import {DataTypes, Model, Options, Sequelize} from 'sequelize';
 import {User} from '../interface/User';
+import CipherModule from '../crypto/CipherModule';
 
+const cipherModule: CipherModule = new CipherModule();
 const options: Options = {
 	dialect: 'sqlite',
 	storage: './sqlite3.db',
@@ -37,6 +39,11 @@ UserModel.init(
 			// field: 'jade_user_password',
 			allowNull: false,
 			comment: 'Jade User Password'
+		},
+		salt: {
+			type: DataTypes.STRING(32),
+			allowNull: false,
+			comment: 'salt'
 		}
 	}, {
 		modelName: 'User',
@@ -46,5 +53,23 @@ UserModel.init(
 		sequelize: new Sequelize(options)
 	}
 );
+
+UserModel.beforeCreate((userModel, options) => {
+	const jadeUserPassword: string = userModel.getDataValue('jadeUserPassword');
+	const encryptedText: string = cipherModule.encrypt(jadeUserPassword);
+	
+	userModel.setDataValue('jadeUserPassword', encryptedText);
+	userModel.setDataValue('salt', cipherModule.getSalt());
+});
+
+UserModel.afterFind((userModel, options) => {
+	if (userModel != null && userModel instanceof UserModel) {
+		const jadeUserPassword: string = userModel.getDataValue('jadeUserPassword');
+		const salt: string = userModel.getDataValue('salt');
+		const decryptedText: string = cipherModule.decrypt(jadeUserPassword, salt);
+		
+		userModel.setDataValue('jadeUserPassword', decryptedText);
+	}
+});
 
 export default UserModel;
