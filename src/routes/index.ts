@@ -83,7 +83,21 @@ router.get('/db/create', async (req, res) => {
 	const text: string = (result) ? 'Success create table!' : 'Fail create table!';
 	
 	res.send(text);
-})
+});
+
+router.post('/db/insert', async (req, res) => {
+	const userRepository: UserRepository = new UserRepository();
+	const userOne: User = {
+		userId: req.body.user_id,
+		userName: req.body.user_name,
+		jadeUserId: req.body.jade_user_id,
+		jadeUserPassword: req.body.jade_user_password,
+		salt: ''
+	}
+	const result: User = await userRepository.insertOne(userOne);
+	
+	return (result.salt !== '') ? res.send('Success insert your info!') : res.send('Fail to insert your info!');
+});
 
 router.get('/cipher', (req, res) => {
 	const text: string = '';
