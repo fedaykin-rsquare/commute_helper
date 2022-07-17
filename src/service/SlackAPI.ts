@@ -2,7 +2,7 @@ import {logger} from '../log/winston';
 import Slack from 'slack-node';
 
 class SlackAPI {
-	private slackUrl: string = '';
+	private slackUrl: string = <string> process.env.slack_url;
 	private slack: Slack = new Slack();
 	
 	constructor() {
