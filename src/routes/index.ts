@@ -99,6 +99,17 @@ router.post('/db/insert', async (req, res) => {
 	return (result.salt !== '') ? res.send('Success insert your info!') : res.send('Fail to insert your info!');
 });
 
+router.get('/db/select:id', async (req, res) => {
+	const userRepository: UserRepository = new UserRepository();
+	const userId: string = req.params.id;
+	const result: User | null = await userRepository.findByUserId(userId);
+	
+	result!.jadeUserPassword = '';
+	result!.salt = '';
+	
+	return (result != null) ? res.send(result) : res.send('Can\'t find your info! - userId(' + userId + ')');
+});
+
 router.get('/cipher', (req, res) => {
 	const text: string = '';
 	const cipherModule: CipherModule = new CipherModule();
