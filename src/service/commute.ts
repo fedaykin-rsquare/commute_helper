@@ -25,7 +25,7 @@ class Commute {
 		
 		try {
 			const browser: Browser = await puppeteer.launch({
-				headless: false
+				headless: true
 				, slowMo: 0
 				, defaultViewport: {
 					width: 1024
