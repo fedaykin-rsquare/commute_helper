@@ -2,3 +2,5 @@
 /node_modules/
 /dist/
 /.idea/
+/logs/
+sqlite3.db
