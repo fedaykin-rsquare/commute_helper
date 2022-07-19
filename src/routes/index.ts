@@ -38,6 +38,8 @@ router.post('/message', async (req, res) => {
 				userInfo.salt = '';
 				
 				slackAPI.send(JSON.stringify(userInfo));
+			} else {
+				slackAPI.send('DB에서 정보를 찾을 수 없습니다.', slackInfo.userName);
 			}
 		}
 	} catch (e) {
