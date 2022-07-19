@@ -1,4 +1,4 @@
-import express, {Application} from 'express';
+import express, {Application, ErrorRequestHandler, NextFunction} from 'express';
 import morgan from 'morgan';
 import path from 'path';
 import {logger, stream} from './log/winston';
@@ -16,6 +16,10 @@ app.use(cookieParser());
 app.use(express.static(path.join('public')));
 
 app.use('/', indexRouter);
-app.use('/users', usersRouter);
+// app.use('/users', usersRouter);
+app.use(<ErrorRequestHandler>function (err, req, res, next) {
+	console.error(err.status);
+	console.error(err);
+});
 
 export default app;

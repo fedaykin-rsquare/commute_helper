@@ -1,10 +1,12 @@
 import {logger} from '../log/winston';
-import puppeteer, {Browser, ElementHandle, HTTPResponse, Page, WaitForOptions} from 'puppeteer';
-import {selector} from '../interface/Selector';
+import puppeteer, {Browser, ElementHandle, Frame, HTTPResponse, Page, WaitForOptions} from 'puppeteer';
+import {selector} from '../interface/Selectors';
 import SlackAPI from './SlackAPI';
 import UserRepository from '../repository/UserRepository';
 import {User} from '../interface/User';
 import {SlackInfo} from '../interface/SlackInfo';
+import {messageTypes} from '../interface/MessageTypes';
+import {alertMessages} from '../interface/AlertMessages';
 
 class Commute {
 	private userRepository: UserRepository = new UserRepository();
@@ -13,8 +15,8 @@ class Commute {
 	// 'load' | 'domcontentloaded' | 'networkidle0' | 'networkidle2';
 	private waitForOptions: WaitForOptions = {
 		// timeout: 5000,
-		waitUntil: 'domcontentloaded'
-	}
+		waitUntil: 'networkidle2'
+	};
 	
 	constructor() {
 	
@@ -35,8 +37,12 @@ class Commute {
 					, hasTouch: false
 					, isLandscape: false
 				}
-				, timeout: 5000
+				, timeout: 500
 				, pipe: false
+				, args: [
+					'--disable-web-security',
+					'--disable-features=IsolateOrigins,site-per-process'
+				]
 			});
 			
 			logger.info('Browser is launched!');
@@ -86,13 +92,17 @@ class Commute {
 						const userInfo: User | null = await this.userRepository.findByUserId(slackInfo.userName);
 						
 						if (dialogType === 'alert') {
-							logger.error(dialogMessage);
+							if (dialogMessage !== alertMessages.save) {
+								logger.error(dialogMessage);
+							}
+							
+							new SlackAPI().send(dialogMessage, userInfo?.userName);
+							
+							await page.close();
+							await browser.close();
 						} else if (dialogType === 'confirm') {
-						
+							await dialog.accept();
 						}
-						
-						await dialog.accept();
-						new SlackAPI().send(dialogMessage, userInfo?.userName);
 					});
 					
 					return page;
@@ -106,52 +116,38 @@ class Commute {
 		return null;
 	}
 	
-	 public async start(page: Page) {
-		 logger.info('start function is started!');
-		 
-		 await page.waitForTimeout(1000);
-		 await page.click(selector.startWork);
-		 
-		 const blockFrameElementHandle: ElementHandle | null = await page.waitForSelector(selector.blockFrame, this.waitForOptions);
-		 
-		 await blockFrameElementHandle?.evaluate((element, selector) => {
-			 const saveElement: Element | null = document.querySelector(selector.save);
-			
-			 console.log('saveElement :', saveElement);
-		 }, selector);
-	 }
-	
-	public async end(page: Page) {
-		logger.info('end function is started!');
+	public async commute(page: Page, text: string) {
+		logger.info('commute function is started! - ' + text);
 		
-		await page.click(selector.endWork);
-	}
-	
-	public async workStart(slackInfo: SlackInfo) {
-		const browser: Browser | null = await this.launch();
+		const workSelector: string = (text.trim() === messageTypes.start) ? selector.startWork : selector.endWork;
 		
-		if (browser !== null) {
-			const page: Page | null = await this.login(browser, slackInfo);
+		await page.waitForSelector(workSelector, this.waitForOptions);
+		// await page.waitForTimeout(400);
+		await page.click(workSelector);
+		await page.waitForSelector(selector.modalFrame, this.waitForOptions);
+		
+		// const frameHandle: ElementHandle | null = await page.$(selector.modalFrame);
+		const frameHandle: ElementHandle | null = await page.waitForSelector(selector.modalFrame, this.waitForOptions);
+		
+		if (frameHandle !== null) {
+			const frameBody: Frame | null = await frameHandle.contentFrame();
 			
-			if (page !== null) {
-				await this.start(page);
+			if (frameBody !== null) {
+				await frameBody.waitForSelector(selector.save, this.waitForOptions);
+				await frameBody.click(selector.save);
 			}
-			
-			// await browser.close();
 		}
 	}
 	
-	public async workEnd(slackInfo: SlackInfo) {
+	public async prepareForCommute(slackInfo: SlackInfo) {
 		const browser: Browser | null = await this.launch();
 		
 		if (browser !== null) {
 			const page: Page | null = await this.login(browser, slackInfo);
 			
 			if (page !== null) {
-				await this.end(page);
+				await this.commute(page, slackInfo.text);
 			}
-			
-			await browser.close();
 		}
 	}
 }
