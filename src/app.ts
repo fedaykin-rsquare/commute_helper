@@ -5,7 +5,6 @@ import {logger, stream} from './log/winston';
 import cookieParser from 'cookie-parser';
 
 const indexRouter = require('./routes/index');
-const usersRouter = require('./routes/users');
 const app: Application = express();
 
 app.use(morgan('dev', {stream: stream}));

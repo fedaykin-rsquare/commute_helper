@@ -42,7 +42,7 @@ router.post('/message', async (req, res) => {
 		}
 	} catch (e) {
 		logger.error(e);
-		slackAPI.send(JSON.stringify(e));
+		// slackAPI.send(JSON.stringify(e));
 	}
 	
 	// res.json({'text': '발신 테스트 중입니다.'});
