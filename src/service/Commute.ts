@@ -7,6 +7,7 @@ import {User} from '../interface/User';
 import {SlackInfo} from '../interface/SlackInfo';
 import {messageTypes} from '../interface/MessageTypes';
 import {alertMessages} from '../interface/AlertMessages';
+import {responseMessages} from '../interface/ResponseMessages';
 
 class Commute {
 	private userRepository: UserRepository = new UserRepository();
@@ -37,7 +38,7 @@ class Commute {
 					, hasTouch: false
 					, isLandscape: false
 				}
-				, timeout: 500
+				, timeout: 5000
 				, pipe: false
 				, args: [
 					'--disable-web-security',
@@ -62,6 +63,7 @@ class Commute {
 		
 		const page: Page = await browser.newPage();
 		const response: HTTPResponse | null = await page.goto(this.jadeUrl);
+		const slackAPI: SlackAPI = new SlackAPI();
 		
 		if (response !== null && response.ok()) {
 			const loginButton: ElementHandle | null = await page.waitForSelector(selector.login, this.waitForOptions);
@@ -89,14 +91,16 @@ class Commute {
 					page.on('dialog', async (dialog) => {
 						const dialogType: string = dialog.type(); // 'alert' | 'confirm' | 'prompt' | 'beforeunload'
 						const dialogMessage: string = dialog.message();
-						const userInfo: User | null = await this.userRepository.findByUserId(slackInfo.userName);
 						
 						if (dialogType === 'alert') {
 							if (dialogMessage !== alertMessages.save) {
 								logger.error(dialogMessage);
+								slackAPI.send(responseMessages.fail(slackInfo.text));
 							}
 							
-							new SlackAPI().send(dialogMessage, userInfo?.userName);
+							if (dialogMessage === alertMessages.save) {
+								slackAPI.send(responseMessages.success(slackInfo.text));
+							}
 							
 							await page.close();
 							await browser.close();
@@ -122,11 +126,9 @@ class Commute {
 		const workSelector: string = (text.trim() === messageTypes.start) ? selector.startWork : selector.endWork;
 		
 		await page.waitForSelector(workSelector, this.waitForOptions);
-		// await page.waitForTimeout(400);
 		await page.click(workSelector);
 		await page.waitForSelector(selector.modalFrame, this.waitForOptions);
 		
-		// const frameHandle: ElementHandle | null = await page.$(selector.modalFrame);
 		const frameHandle: ElementHandle | null = await page.waitForSelector(selector.modalFrame, this.waitForOptions);
 		
 		if (frameHandle !== null) {

@@ -1,6 +1,5 @@
 
 export interface MessageTypes {
-	wake: string
 	register: string
 	start: string
 	end: string
@@ -8,7 +7,6 @@ export interface MessageTypes {
 }
 
 export const messageTypes: MessageTypes = {
-	wake: '일어나',
 	register: '등록',
 	start: '출근',
 	end: '퇴근',

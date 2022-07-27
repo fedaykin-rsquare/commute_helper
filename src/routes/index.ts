@@ -23,9 +23,7 @@ router.post('/message', async (req, res) => {
 	const slackAPI: SlackAPI = new SlackAPI();
 	
 	try {
-		if (message === messageTypes.wake) {
-			slackAPI.send('서버가 깨어났습니다');
-		} else if (message === messageTypes.register) {
+		if (message === messageTypes.register) {
 		
 		} else if (message === messageTypes.start || message === messageTypes.end) {
 			await commute.prepareForCommute(slackInfo);
