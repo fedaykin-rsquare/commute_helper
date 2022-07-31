@@ -22,10 +22,14 @@ router.post('/message', async (req, res) => {
 	const message: string = slackInfo.text.trim();
 	const slackAPI: SlackAPI = new SlackAPI();
 	
+	logger.info(`${slackInfo.userId}(${slackInfo.userName}) requested ${message}`);
+	
 	try {
 		if (message === messageTypes.register) {
 		
 		} else if (message === messageTypes.start || message === messageTypes.end) {
+			slackAPI.send(`요청하신 ${message}가 처리되고 있습니다. 잠시만 기다려주세요.`, slackInfo.userName);
+			
 			await commute.prepareForCommute(slackInfo);
 		} else if (message === messageTypes.info) {
 			const userRepository: UserRepository = new UserRepository();
@@ -44,12 +48,10 @@ router.post('/message', async (req, res) => {
 		logger.error(e);
 		// slackAPI.send(JSON.stringify(e));
 	}
-	
-	// res.json({'text': '발신 테스트 중입니다.'});
 });
 
 // 테스트용
-router.get('/commute', (async (req, res) => {
+/*router.get('/commute', (async (req, res) => {
 	const commute: Commute = new Commute();
 	const slackInfo: SlackInfo = {
 		teamDomain: 'rsquare',
@@ -75,7 +77,7 @@ router.get('/commute', (async (req, res) => {
 	} catch (e) {
 		console.error(e);
 	}
-}));
+}));*/
 
 // 등록 테스트용
 router.get('/register', ((req, res) => {
