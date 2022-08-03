@@ -175,8 +175,10 @@ class Commute {
 			}
 			
 			if (match !== null) {
+				logger.info('You can confirm processing history!');
 				slackAPI.send(responseMessages.confirm(slackInfo.text.trim(), match[0]), this.userInfo.userName);
 			} else {
+				logger.error('Can\'t get processing history!');
 				slackAPI.send('처리 내역을 찾을 수 없습니다.', this.userInfo.userName);
 			}
 		}
