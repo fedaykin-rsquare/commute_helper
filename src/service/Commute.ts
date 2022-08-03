@@ -11,13 +11,14 @@ import {responseMessages} from '../interface/ResponseMessages';
 
 class Commute {
 	private userRepository: UserRepository = new UserRepository();
-	private jadeUrl: string = <string>process.env.jade_url;
-	private companyCode: string = <string>process.env.company_code;
+	private readonly jadeUrl: string = <string>process.env.jade_url;
+	private readonly companyCode: string = <string>process.env.company_code;
 	// 'load' | 'domcontentloaded' | 'networkidle0' | 'networkidle2';
-	private waitForOptions: WaitForOptions = {
+	private readonly waitForOptions: WaitForOptions = {
 		// timeout: 5000,
 		waitUntil: 'networkidle2'
 	};
+	private userInfo: User | null = null;
 	
 	constructor() {
 	
@@ -69,9 +70,9 @@ class Commute {
 			const loginButton: ElementHandle | null = await page.waitForSelector(selector.login, this.waitForOptions);
 			
 			if (loginButton !== null) {
-				const userInfo: User | null = await this.userRepository.findByUserId(slackInfo.userName);
+				this.userInfo = await this.userRepository.findByUserId(slackInfo.userName);
 				
-				if (userInfo == null) {
+				if (this.userInfo === null) {
 					logger.error('Can\'t get User Information for jade!');
 					logger.error('Slack Id - ' + slackInfo.userName);
 					
@@ -79,15 +80,16 @@ class Commute {
 				}
 				
 				await page.type(selector.company, this.companyCode);
-				await page.type(selector.id, userInfo.jadeUserId);
-				await page.type(selector.password, userInfo.jadeUserPassword);
+				await page.type(selector.id, this.userInfo.jadeUserId);
+				await page.type(selector.password, this.userInfo.jadeUserPassword);
 				await page.click(selector.login);
 				
 				const nextPageResponse: HTTPResponse | null = await page.waitForNavigation(this.waitForOptions);
 				
 				if (nextPageResponse !== null && nextPageResponse.ok()) {
-					logger.info('Success in login! ID - ' + userInfo.jadeUserId);
+					logger.info('Success in login! ID - ' + this.userInfo.jadeUserId);
 					
+					// todo dialog event 위치 이동 필요해보임..
 					page.on('dialog', async (dialog) => {
 						const dialogType: string = dialog.type(); // 'alert' | 'confirm' | 'prompt' | 'beforeunload'
 						const dialogMessage: string = dialog.message();
@@ -149,6 +151,48 @@ class Commute {
 			
 			if (page !== null) {
 				await this.commute(page, slackInfo.text);
+			}
+		}
+	}
+	
+	public async confirm(page: Page, slackInfo: SlackInfo) {
+		logger.info('confirm function is started! - ' + slackInfo.text);
+		
+		const slackAPI: SlackAPI = new SlackAPI();
+		const confirmSelector: string = (slackInfo.text.trim() === messageTypes.confirm_start) ? selector.confirm_start : selector.confirm_end;
+		const content: string | undefined = await page.$eval(confirmSelector, (element: Element) => {
+			return element.textContent?.trim();
+		});
+		
+		if (content !== undefined) {
+			const match: RegExpMatchArray | null = content.match('([0-9]{2}:[0-9]{2})');
+			
+			if (this.userInfo === null) {
+				logger.error('Can\'t get User Information for jade!');
+				logger.error('Slack Id - ' + slackInfo.userName);
+				
+				return null;
+			}
+			
+			if (match !== null) {
+				slackAPI.send(responseMessages.confirm(slackInfo.text.trim(), match[0]), this.userInfo.userName);
+			} else {
+				slackAPI.send('처리 내역을 찾을 수 없습니다.', this.userInfo.userName);
+			}
+		}
+		
+		await page.close();
+		await page.browser().close();
+	}
+	
+	public async prepareForConfirm(slackInfo: SlackInfo) {
+		const browser: Browser | null = await this.launch();
+		
+		if (browser !== null) {
+			const page: Page | null = await this.login(browser, slackInfo);
+			
+			if (page !== null) {
+				await this.confirm(page, slackInfo);
 			}
 		}
 	}

@@ -25,13 +25,15 @@ router.post('/message', async (req, res) => {
 	logger.info(`${slackInfo.userId}(${slackInfo.userName}) requested ${message}`);
 	
 	try {
-		if (message === messageTypes.register) {
+		if (message === messageTypes.register) { // 등록
 		
-		} else if (message === messageTypes.start || message === messageTypes.end) {
+		} else if (message === messageTypes.start || message === messageTypes.end) { // 출퇴근 요청
 			slackAPI.send(`요청하신 ${message}가 처리되고 있습니다. 잠시만 기다려주세요.`, slackInfo.userName);
 			
 			await commute.prepareForCommute(slackInfo);
-		} else if (message === messageTypes.info) {
+		} else if (message === messageTypes.confirm_start || message === messageTypes.confirm_end) { // 출퇴근 확인
+			await commute.prepareForConfirm(slackInfo);
+		} else if (message === messageTypes.info) { // 내정보 확인
 			const userRepository: UserRepository = new UserRepository();
 			const userInfo: User | null = await userRepository.findByUserId(slackInfo.userName);
 			

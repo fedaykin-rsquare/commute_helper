@@ -1,13 +1,15 @@
 
-export declare interface Selectors {
-	company: string,
-	id: string,
-	password: string,
-	login: string,
-	startWork: string,
-	endWork: string,
-	modalFrame: string,
-	save: string,
+export interface Selectors {
+	company: string;
+	id: string;
+	password: string;
+	login: string;
+	startWork: string;
+	endWork: string;
+	modalFrame: string;
+	save: string;
+	confirm_start: string;
+	confirm_end: string;
 }
 
 export const selector: Selectors = {
@@ -18,5 +20,7 @@ export const selector: Selectors = {
 	startWork: '#S_WORK_STA_BTN',
 	endWork: '#S_WORK_END_BTN',
 	modalFrame: '.modalCon iframe',
-	save: '.save'
+	save: '.save',
+	confirm_start: '#C_IN_HM',
+	confirm_end: '#C_OUT_HM'
 };

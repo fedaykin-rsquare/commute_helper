@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "node dist/bin/www.js",
+    "start": "tsc -p . && node dist/bin/www.js",
     "build": "tsc -p ."
   },
   "devDependencies": {
