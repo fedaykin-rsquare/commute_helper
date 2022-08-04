@@ -28,7 +28,7 @@ router.post('/message', async (req, res) => {
 		if (message === messageTypes.register) { // 등록
 		
 		} else if (message === messageTypes.start || message === messageTypes.end) { // 출퇴근 요청
-			slackAPI.send(`요청하신 ${message}가 처리되고 있습니다. 잠시만 기다려주세요.`, slackInfo.userName);
+			slackAPI.send(`요청하신 ${message}이 처리되고 있습니다. 잠시만 기다려주세요.`);
 			
 			await commute.prepareForCommute(slackInfo);
 		} else if (message === messageTypes.confirm_start || message === messageTypes.confirm_end) { // 출퇴근 확인
