@@ -1,6 +1,5 @@
 import express from 'express';
 import Commute from '../service/Commute';
-import {Browser, Page} from 'puppeteer';
 import {convertToSlackInfo, OutWebhook, SlackInfo} from '../interface/SlackInfo';
 import {messageTypes} from '../interface/MessageTypes';
 import UserRepository from '../repository/UserRepository';
@@ -45,10 +44,19 @@ router.post('/message', async (req, res) => {
 			} else {
 				slackAPI.send('DB에서 정보를 찾을 수 없습니다.', slackInfo.userName);
 			}
+		} else if (message === messageTypes.info_delete) { // 내정보 삭제
+			const userRepository: UserRepository = new UserRepository();
+			const result = await userRepository.deleteOne(slackInfo.userName);
+			
+			if (result > 0) {
+				slackAPI.send('정상적으로 삭제되었습니다.', slackInfo.userName);
+			} else {
+				slackAPI.send('삭제하는데 실패했습니다.', slackInfo.userName);
+			}
 		}
 	} catch (e) {
 		logger.error(e);
-		// slackAPI.send(JSON.stringify(e));
+		slackAPI.send(JSON.stringify(e));
 	}
 });
 
@@ -86,13 +94,13 @@ router.get('/register', ((req, res) => {
 	res.send('not yet!');
 }));
 
-router.get('/db/create', async (req, res) => {
+/*router.get('/db/create', async (req, res) => {
 	const userRepository: UserRepository = new UserRepository();
 	const result: boolean = await userRepository.createTable();
 	const text: string = (result) ? 'Success create table!' : 'Fail create table!';
 	
 	res.send(text);
-});
+});*/
 
 router.post('/db/insert', async (req, res) => {
 	const userRepository: UserRepository = new UserRepository();

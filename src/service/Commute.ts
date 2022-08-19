@@ -75,6 +75,7 @@ class Commute {
 				if (this.userInfo === null) {
 					logger.error('Can\'t get User Information for jade!');
 					logger.error('Slack Id - ' + slackInfo.userName);
+					slackAPI.send('등록되지 않은 사용자입니다. jade 정보를 등록해주세요.', slackInfo.userName);
 					
 					return null;
 				}
@@ -151,6 +152,8 @@ class Commute {
 			
 			if (page !== null) {
 				await this.commute(page, slackInfo.text);
+			} else {
+				await browser.close();
 			}
 		}
 	}
@@ -195,6 +198,8 @@ class Commute {
 			
 			if (page !== null) {
 				await this.confirm(page, slackInfo);
+			} else {
+				await browser.close();
 			}
 		}
 	}

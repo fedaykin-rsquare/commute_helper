@@ -44,7 +44,7 @@ UserModel.init(
 			type: DataTypes.STRING(32),
 			allowNull: false,
 			comment: 'salt'
-		}
+		},
 	}, {
 		modelName: 'User',
 		tableName: 'User',
