@@ -1,5 +1,5 @@
 import {logger} from '../log/winston';
-import puppeteer, {Browser, ElementHandle, Frame, HTTPResponse, Page, WaitForOptions} from 'puppeteer';
+import puppeteer, {Browser, Dialog, ElementHandle, Frame, HTTPResponse, Page, WaitForOptions} from 'puppeteer';
 import {selector} from '../interface/Selectors';
 import SlackAPI from './SlackAPI';
 import UserRepository from '../repository/UserRepository';
@@ -102,6 +102,7 @@ class Commute {
 							}
 							
 							if (dialogMessage === alertMessages.save) {
+								logger.info('You are successful in ' + slackInfo.text + ' - ' + slackInfo.userName);
 								slackAPI.send(responseMessages.success(slackInfo.text));
 							}
 							

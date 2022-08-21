@@ -56,7 +56,7 @@ router.post('/message', async (req, res) => {
 		}
 	} catch (e) {
 		logger.error(e);
-		slackAPI.send(JSON.stringify(e));
+		// slackAPI.send(JSON.stringify(e));
 	}
 });
 
