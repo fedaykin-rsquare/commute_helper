@@ -66,6 +66,7 @@ class Commute {
 		const response: HTTPResponse | null = await page.goto(this.jadeUrl);
 		const slackAPI: SlackAPI = new SlackAPI();
 		
+		// todo page.close, page.browser.close를 맨 아래로 빼도 될지 test 필요
 		if (response !== null && response.ok()) {
 			const loginButton: ElementHandle | null = await page.waitForSelector(selector.login, this.waitForOptions);
 			
@@ -99,6 +100,7 @@ class Commute {
 							if (dialogMessage !== alertMessages.save) {
 								logger.error(dialogMessage);
 								slackAPI.send(responseMessages.fail(slackInfo.text));
+								slackAPI.send(responseMessages.error(dialogMessage));
 							}
 							
 							if (dialogMessage === alertMessages.save) {
@@ -114,11 +116,19 @@ class Commute {
 					});
 					
 					return page;
+				} else {
+					await page.close();
+					await browser.close();
 				}
+			} else {
+				await page.close();
+				await browser.close();
 			}
 		} else {
 			logger.error('Fail to connection login page!');
 			logger.error('response :', response);
+			await page.close();
+			await browser.close();
 		}
 		
 		return null;
@@ -135,13 +145,20 @@ class Commute {
 		
 		const frameHandle: ElementHandle | null = await page.waitForSelector(selector.modalFrame, this.waitForOptions);
 		
+		// todo page.close, page.browser.close를 맨 아래로 빼도 될지 test 필요
 		if (frameHandle !== null) {
 			const frameBody: Frame | null = await frameHandle.contentFrame();
 			
 			if (frameBody !== null) {
 				await frameBody.waitForSelector(selector.save, this.waitForOptions);
 				await frameBody.click(selector.save);
+			} else {
+				await page.close();
+				await page.browser().close();
 			}
+		} else {
+			await page.close();
+			await page.browser().close();
 		}
 	}
 	

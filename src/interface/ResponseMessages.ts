@@ -33,5 +33,10 @@ export const responseMessages = {
 		}
 		
 		return responseText;
+	},
+	error: (text: string): string => {
+		const responseText: string = `실패 사유: ${text}`;
+		
+		return responseText;
 	}
 }
