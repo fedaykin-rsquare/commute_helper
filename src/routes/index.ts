@@ -4,7 +4,6 @@ import {convertToSlackInfo, OutWebhook, SlackInfo} from '../interface/SlackInfo'
 import {messageTypes} from '../interface/MessageTypes';
 import UserRepository from '../repository/UserRepository';
 import {User} from '../interface/User';
-import SlackAPI from '../service/SlackAPI';
 import {logger} from '../log/winston';
 
 const router = express.Router();
@@ -19,40 +18,16 @@ router.post('/message', async (req, res) => {
 	const commute: Commute = new Commute();
 	const slackInfo: SlackInfo = convertToSlackInfo(req.body as OutWebhook);
 	const message: string = slackInfo.text.trim();
-	const slackAPI: SlackAPI = new SlackAPI();
 	
 	logger.info(`${slackInfo.userId}(${slackInfo.userName}) requested ${message}`);
 	
 	try {
 		if (message === messageTypes.register) { // 등록
 		
-		} else if (message === messageTypes.start || message === messageTypes.end) { // 출퇴근 요청
-			slackAPI.send(`요청하신 ${message}이 처리되고 있습니다. 잠시만 기다려주세요.`);
-			
-			await commute.prepareForCommute(slackInfo);
-		} else if (message === messageTypes.confirm_start || message === messageTypes.confirm_end) { // 출퇴근 확인
-			await commute.prepareForConfirm(slackInfo);
-		} else if (message === messageTypes.info) { // 내정보 확인
-			const userRepository: UserRepository = new UserRepository();
-			const userInfo: User | null = await userRepository.findByUserId(slackInfo.userName);
-			
-			if (userInfo !== null) {
-				userInfo.jadeUserPassword = '';
-				userInfo.salt = '';
-				
-				slackAPI.send(JSON.stringify(userInfo));
-			} else {
-				slackAPI.send('DB에서 정보를 찾을 수 없습니다.', slackInfo.userName);
-			}
-		} else if (message === messageTypes.info_delete) { // 내정보 삭제
-			const userRepository: UserRepository = new UserRepository();
-			const result = await userRepository.deleteOne(slackInfo.userName);
-			
-			if (result > 0) {
-				slackAPI.send('정상적으로 삭제되었습니다.', slackInfo.userName);
-			} else {
-				slackAPI.send('삭제하는데 실패했습니다.', slackInfo.userName);
-			}
+		} else if (message === messageTypes.info || message === messageTypes.info_delete ||
+			message === messageTypes.start || message === messageTypes.end ||
+			message === messageTypes.confirm_start || message === messageTypes.confirm_end) {
+			await commute.start(slackInfo);
 		}
 	} catch (e) {
 		logger.error(e);

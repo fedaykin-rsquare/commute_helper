@@ -5,9 +5,9 @@ export const responseMessages = {
 		let responseText: string = '';
 		
 		if (text.trim() === messageTypes.start) {
-			responseText = '성공적으로 출근 처리 되었습니다.';
+			responseText = '성공적으로 출근 되었습니다. 오늘 하루도 화이팅하세요! :meow_code:';
 		} else if (text.trim() === messageTypes.end) {
-			responseText = '성공적으로 퇴근 처리 되었습니다.';
+			responseText = '성공적으로 퇴근 되었습니다. 얼른 집가서 푹 쉬세요! :meow_party:';
 		}
 		
 		return responseText;
@@ -33,6 +33,9 @@ export const responseMessages = {
 		}
 		
 		return responseText;
+	},
+	confirm_fail: (text: string): string => {
+		return `${text}이 처리된 내역을 찾을 수 없습니다.`;
 	},
 	error: (text: string): string => {
 		const responseText: string = `실패 사유: ${text}`;
