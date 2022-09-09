@@ -140,7 +140,9 @@ class Commute {
 						if (dialogMessage !== alertMessages.save) {
 							logger.error(dialogMessage);
 							this.slackAPI.send(responseMessages.fail(message));
-							this.slackAPI.send(responseMessages.error(dialogMessage));
+							setTimeout(() => {
+								this.slackAPI.send(responseMessages.error(dialogMessage));
+							}, 200);
 						}
 						
 						if (dialogMessage === alertMessages.save) {
@@ -148,8 +150,13 @@ class Commute {
 							this.slackAPI.send(responseMessages.success(message), userInfo.userName);
 						}
 						
-						// await page.close();
-						// await browser.close();
+						if (page !== null && !page.isClosed()) {
+							await page.close();
+						}
+						
+						if (browser !== null) {
+							await browser.close();
+						}
 					} else if (dialogType === 'confirm') {
 						await dialog.accept();
 					}
@@ -161,7 +168,7 @@ class Commute {
 					await this.commute(page, message);
 				}
 				
-				if (page !== null) {
+				if (page !== null && !page.isClosed()) {
 					await page.close();
 				}
 			}
@@ -192,7 +199,10 @@ class Commute {
 			}
 		}
 		
-		await page.close();
+		if (page !== null && !page.isClosed()) {
+			await page.close();
+			await page.browser().close();
+		}
 	}
 	
 	public async commute(page: Page, message: string) {
@@ -216,7 +226,10 @@ class Commute {
 			}
 		}
 		
-		await page.close();
+		if (page !== null && !page.isClosed()) {
+			await page.close();
+			await page.browser().close();
+		}
 	}
 }
 

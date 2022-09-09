@@ -1,12 +1,11 @@
 import {logger} from '../log/winston';
-import Slack from 'slack-node';
+import {IncomingWebhook} from '@slack/webhook';
 
 class SlackAPI {
 	private slackUrl: string = <string> process.env.slack_url;
-	private slack: Slack = new Slack();
+	private webhook: IncomingWebhook = new IncomingWebhook(this.slackUrl);
 	
 	constructor() {
-		this.slack.setWebhook(this.slackUrl);
 	}
 	
 	public send(message: string, userName: string = '') {
@@ -14,13 +13,27 @@ class SlackAPI {
 			message = userName + '님 ' + message;
 		}
 		
-		this.slack.webhook({
+		
+		(async () => {
+			await this.webhook.send({
+				blocks: [{
+					type: 'section',
+					text: {
+						type: 'mrkdwn',
+						text: message,
+					}
+				}],
+			});
+		})();
+		
+		/*this.webhook.webhook({
+			
 			text: message
 		}, (err, response) => {
 			if (response.status === 'fail') {
 				logger.error(err.errorMessage);
 			}
-		});
+		});*/
 	}
 }
 
